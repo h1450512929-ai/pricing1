@@ -120,9 +120,122 @@
                 padding: 5px;
             }
         }
+        /* 登录页面样式 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 350px;
+        }
+        .login-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        .login-btn {
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background: #764ba2;
+        }
+        .login-error {
+            color: #f44336;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        .login-hidden {
+            display: none;
+        }
+        .logout-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
     </style>
 </head>
 <body>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <div class="login-title">农资销售计价软件</div>
+            <div class="login-form">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" onkeypress="if(event.key==='Enter')handleLogin()">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" onkeypress="if(event.key==='Enter')handleLogin()">
+                </div>
+                <div class="login-error" id="loginError"></div>
+                <button class="login-btn" onclick="handleLogin()">登录</button>
+            </div>
+            <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+                <p>预设账户：</p>
+                <p>用户1 / 密码1</p>
+                <p>用户2 / 密码2</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="login-hidden">
+        <button class="logout-btn" onclick="handleLogout()">退出登录</button>
     <div class="container">
         <div class="title">农资销售计价软件</div>
         <div class="section">
@@ -232,8 +345,122 @@
 
         <div class="total-text" id="totalText">当前筛选总计: 0.00 元</div>
     </div>
+    </div>
 
     <script>
+        // ===== 登录系统 =====
+        // 预设用户（用户名: 密码）
+        const presetUsers = {
+            "用户1": "123456",
+            "用户2": "123456",
+            "admin": "admin123"
+        };
+
+        // 简单的加密函数（将密码和用户名混合加密）
+        function encryptPassword(password, username) {
+            const combined = password + username;
+            let encrypted = "";
+            for(let i = 0; i < combined.length; i++) {
+                encrypted += combined.charCodeAt(i).toString(16).padStart(2, '0');
+            }
+            return encrypted;
+        }
+
+        // 解密函数（用于验证）
+        function verifyPassword(storedHash, password, username) {
+            return storedHash === encryptPassword(password, username);
+        }
+
+        // 登录处理
+        function handleLogin() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const errorDiv = document.getElementById("loginError");
+
+            if(!username || !password) {
+                errorDiv.textContent = "请输入用户名和密码";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            if(presetUsers[username] === password) {
+                // 登录成功，保存登录信息
+                const loginToken = encryptPassword(password, username);
+                localStorage.setItem("loginToken", loginToken);
+                localStorage.setItem("currentUser", username);
+                localStorage.setItem("loginTime", new Date().toISOString());
+                
+                // 显示主应用，隐藏登录页
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainApp").classList.remove("login-hidden");
+                
+                // 初始化应用
+                initApp();
+            } else {
+                errorDiv.textContent = "用户名或密码错误";
+                errorDiv.style.display = "block";
+            }
+        }
+
+        // 退出登录处理
+        function handleLogout() {
+            if(confirm("确定要退出登录吗？")) {
+                localStorage.removeItem("loginToken");
+                localStorage.removeItem("currentUser");
+                localStorage.removeItem("loginTime");
+                
+                // 隐藏主应用，显示登录页
+                document.getElementById("loginPage").style.display = "flex";
+                document.getElementById("mainApp").classList.add("login-hidden");
+                
+                // 清空表单
+                document.getElementById("username").value = "";
+                document.getElementById("password").value = "";
+                document.getElementById("loginError").style.display = "none";
+            }
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const loginToken = localStorage.getItem("loginToken");
+            const currentUser = localStorage.getItem("currentUser");
+            
+            if(loginToken && currentUser) {
+                // 验证token是否有效
+                for(let user in presetUsers) {
+                    if(user === currentUser) {
+                        const expectedToken = encryptPassword(presetUsers[user], user);
+                        if(expectedToken === loginToken) {
+                            // 登录状态有效
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 页面加载时检查登录状态
+        function initLoginSystem() {
+            if(checkLoginStatus()) {
+                // 已登录，显示主应用
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainApp").classList.remove("login-hidden");
+            } else {
+                // 未登录，显示登录页
+                document.getElementById("loginPage").style.display = "flex";
+                document.getElementById("mainApp").classList.add("login-hidden");
+            }
+        }
+
+        // 应用初始化函数
+        function initApp() {
+            initSelects();
+            refreshFilterOptions();
+            applyFilter();
+        }
+
+        // ===== 原有功能 =====
         // 产品价格
         const productPrices = {
             "磷肥": 94, "复合肥": 120, "农药": 2, "钾肥": 162, "麦子": 267,"大豆": 185,
@@ -249,9 +476,15 @@
         let searchKey = "", sortTimeReverse = false;
 
         window.onload = function() {
-            initSelects();
-            refreshFilterOptions();
-            applyFilter();
+            // 先检查登录状态
+            initLoginSystem();
+            
+            // 如果已登录，初始化应用
+            if(checkLoginStatus()) {
+                initSelects();
+                refreshFilterOptions();
+                applyFilter();
+            }
         };
 
         // 本地存储
