@@ -214,6 +214,17 @@
         .logout-btn:hover {
             background: #d32f2f;
         }
+        .user-badge {
+            position: absolute;
+            top: 10px;
+            right: 125px;
+            background: #2196F3;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -242,6 +253,7 @@
     </div>
 
     <div id="mainApp" class="login-hidden">
+        <div class="user-badge" id="userBadge">用户: -</div>
         <button class="logout-btn" onclick="handleLogout()">退出登录</button>
     <div class="container">
         <div class="title">农资销售计价软件</div>
@@ -403,6 +415,9 @@
                 
                 // 初始化应用
                 initApp();
+                
+                // 更新用户名标签
+                updateUserBadge();
             } else {
                 errorDiv.textContent = "用户名或密码错误";
                 errorDiv.style.display = "block";
@@ -426,10 +441,11 @@
                 document.getElementById("loginPage").style.display = "flex";
                 document.getElementById("mainApp").classList.add("login-hidden");
                 
-                // 清空表单
+                // 清空表单和用户名标签
                 document.getElementById("username").value = "";
                 document.getElementById("password").value = "";
                 document.getElementById("loginError").style.display = "none";
+                document.getElementById("userBadge").textContent = "用户: -";
             }
         }
 
@@ -459,10 +475,19 @@
                 // 已登录，显示主应用
                 document.getElementById("loginPage").style.display = "none";
                 document.getElementById("mainApp").classList.remove("login-hidden");
+                updateUserBadge();  // 更新用户名标签
             } else {
                 // 未登录，显示登录页
                 document.getElementById("loginPage").style.display = "flex";
                 document.getElementById("mainApp").classList.add("login-hidden");
+            }
+        }
+
+        // 更新用户名标签
+        function updateUserBadge() {
+            const currentUser = localStorage.getItem("currentUser");
+            if(currentUser) {
+                document.getElementById("userBadge").textContent = `用户: ${currentUser}`;
             }
         }
 
