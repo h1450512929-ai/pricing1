@@ -416,6 +416,12 @@
                 localStorage.removeItem("currentUser");
                 localStorage.removeItem("loginTime");
                 
+                // 清空页面数据
+                records = [];
+                logs = [];
+                filteredRecords = [];
+                currentCustomerRecords = [];
+                
                 // 隐藏主应用，显示登录页
                 document.getElementById("loginPage").style.display = "flex";
                 document.getElementById("mainApp").classList.add("login-hidden");
@@ -462,6 +468,10 @@
 
         // 应用初始化函数
         function initApp() {
+            // 重新加载该用户的数据
+            records = loadData("sales_data");
+            logs = loadData("operation_log");
+            
             initSelects();
             refreshFilterOptions();
             applyFilter();
@@ -474,8 +484,8 @@
         };
 
         // 全局变量
-        let records = loadData("sales_data");
-        let logs = loadData("operation_log");
+        let records = [];  // 页面加载时为空，登录后再加载
+        let logs = [];
         let filteredRecords = [];
         let currentCustomerRecords = [];
         let pageSize = 50, currentPage = 1, totalPages = 1;
@@ -494,13 +504,19 @@
             }
         };
 
-        // 本地存储
+        // 本地存储（按用户分开）
         function loadData(key) {
-            const data = localStorage.getItem(key);
+            const currentUser = localStorage.getItem("currentUser");
+            // 如果要加载销售数据，按用户分开；如果是日志，使用全局
+            const storageKey = (key === "sales_data" && currentUser) ? `${key}_${currentUser}` : key;
+            const data = localStorage.getItem(storageKey);
             return data ? JSON.parse(data) : [];
         }
         function saveData(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
+            const currentUser = localStorage.getItem("currentUser");
+            // 如果是销售数据，按用户分开；如果是日志，使用全局
+            const storageKey = (key === "sales_data" && currentUser) ? `${key}_${currentUser}` : key;
+            localStorage.setItem(storageKey, JSON.stringify(data));
         }
         function writeLog(action, detail = "") {
             logs.push({ time: new Date().toLocaleString(), action, detail });
@@ -642,6 +658,7 @@
             const seller = document.getElementById("seller").value.trim() || "0";
             const product = document.getElementById("product").value;
             const method = document.getElementById("method").value;
+            const currentUser = localStorage.getItem("currentUser");
             let name, price;
 
             if(product === "其它") {
@@ -656,7 +673,7 @@
             const qty = parseInt(document.getElementById("qty").value);
             const total = Math.round(price*qty*100)/100;
             const time = new Date().toLocaleString();
-            const record = { time, seller, name, method, price, qty, total };
+            const record = { time, seller, name, method, price, qty, total, username: currentUser };
             records.push(record);
             saveData("sales_data", records);
             currentCustomerRecords.push(record);
