@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农资销售计价软件【网页版，可使用代码】</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            /* 全局统一字体大小14px */
+            font-size: 15px;
+        }
+        body {
+            padding: 15px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 12px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-end; /* 底部对齐，修复按钮对齐 */
+            margin-bottom: 8px;
+        }
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 120px;
+        }
+        input, select, button {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            cursor: pointer;
+            background: #2196F3;
+            color: white;
+            border: none;
+            transition: 0.2s;
+            height: 32px; /* 固定高度对齐 */
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .btn-orange { background: #FF9800; }
+        .btn-green { background: #27AE60; }
+        .btn-red { background: #F44336; }
+        .btn-gray { background: #9E9E9E; }
+        .btn-dark-red { background: #B71C1C; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background: #607D8B;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .check-btn {
+            cursor: pointer;
+        }
+        .page-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .total-text {
+            text-align: center;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 10px 0;
+        }
+        @media (max-width: 768px) {
+            .flex-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            th, td {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">农资销售计价软件【网页版，可使用代码】</div>
+        <div class="section">
+            <div class="section-title">软件说明</div>
+            <p>本软件为农资销售计价系统，支持通过代码扩展或使用脚本来自动化记录与查询。</p>
+        </div>
+
+        <!-- 搜索 -->
+        <div class="section">
+            <div class="section-title">快速搜索</div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>搜索售卖人/产品</label>
+                    <input type="text" id="searchInput" onkeyup="onSearch()">
+                </div>
+                <div class="flex-col">
+                    <label>&nbsp;</label>
+                    <button onclick="clearSearch()">清空搜索</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选区域（修复对齐+筛选功能） -->
+        <div class="section">
+            <div class="section-title">筛选条件</div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>售卖人</label>
+                    <select id="sellerFilter" onchange="applyFilter()"></select>
+                </div>
+                <div class="flex-col">
+                    <label>产品名称</label>
+                    <select id="productFilter" onchange="applyFilter()"></select>
+                </div>
+                <div class="flex-col">
+                    <label>开始日期</label>
+                    <select id="startDateFilter" onchange="applyFilter()"></select>
+                </div>
+                <div class="flex-col">
+                    <label>结束日期</label>
+                    <select id="endDateFilter" onchange="applyFilter()"></select>
+                </div>
+                <!-- 重置按钮放入flex-col，对齐选框 -->
+                <div class="flex-col">
+                    <label>&nbsp;</label>
+                    <button onclick="resetFilter()">重置筛选</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="section">
+            <div class="section-title">添加销售记录</div>
+            <div class="flex-row">
+                <div class="flex-col"><label>售卖人</label><input id="seller"></div>
+                <div class="flex-col"><label>产品</label><select id="product" onchange="updateInputs()"></select></div>
+                <div class="flex-col"><label>单价</label><input id="priceDisplay" disabled></div>
+                <div class="flex-col"><label>自定义名称</label><input id="customName" disabled></div>
+                <div class="flex-col"><label>自定义单价</label><input id="customPrice" disabled></div>
+                <div class="flex-col"><label>售卖方式</label><select id="method" onchange="updatePrice()"></select></div>
+                <div class="flex-col"><label>数量</label><select id="qty"></select></div>
+            </div>
+            <div class="flex-row" style="margin-top:10px;">
+                <button onclick="addRecord()">添加产品</button>
+                <button class="btn-orange" onclick="summarizeCustomer()">整单小结</button>
+                <button class="btn-green" onclick="summarizeChecked()">勾选项小结</button>
+                <button class="btn-red" onclick="deleteSelected()">删除选中</button>
+                <button class="btn-gray" onclick="clearTableView()">清空表格</button>
+                <button onclick="exportCSV()">导出Excel</button>
+                <button class="btn-dark-red" onclick="deleteAllData()">删除全部数据</button>
+            </div>
+        </div>
+
+        <!-- 表格（带ID） -->
+        <div style="overflow-x:auto;">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>时间</th>
+                        <th>售卖人</th>
+                        <th>产品名称</th>
+                        <th>售卖方式</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>总价</th>
+                        <th>勾选</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="page-bar">
+            <label>每页：</label>
+            <select id="pageSize" onchange="changePageSize()">
+                <option>20</option>
+                <option selected>50</option>
+                <option>100</option>
+                <option>200</option>
+            </select>
+            <button onclick="prevPage()">上一页</button>
+            <span id="pageLabel">第1页/共1页</span>
+            <button onclick="nextPage()">下一页</button>
+        </div>
+
+        <div class="total-text" id="totalText">当前筛选总计: 0.00 元</div>
+    </div>
+
+    <script>
+        // 产品价格
+        const productPrices = {
+            "磷肥": 94, "复合肥": 120, "农药": 2, "钾肥": 142, "麦子": 267
+        };
+
+        // 全局变量
+        let records = loadData("sales_data");
+        let logs = loadData("operation_log");
+        let filteredRecords = [];
+        let currentCustomerRecords = [];
+        let pageSize = 50, currentPage = 1, totalPages = 1;
+        let filterSeller = "全部", filterProduct = "全部", filterStartDate = "全部", filterEndDate = "全部";
+        let searchKey = "", sortTimeReverse = false;
+
+        window.onload = function() {
+            initSelects();
+            refreshFilterOptions();
+            applyFilter();
+        };
+
+        // 本地存储
+        function loadData(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        }
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+        function writeLog(action, detail = "") {
+            logs.push({ time: new Date().toLocaleString(), action, detail });
+            saveData("operation_log", logs);
+        }
+
+        // 初始化下拉
+        function initSelects() {
+            const productSel = document.getElementById("product");
+            Object.keys(productPrices).forEach(p => {
+                productSel.add(new Option(p, p));
+            });
+            productSel.add(new Option("其它", "其它"));
+
+            const methodSel = document.getElementById("method");
+            ["按袋", "按斤"].forEach(m => methodSel.add(new Option(m, m)));
+
+            const qtySel = document.getElementById("qty");
+            for(let i=1; i<=200; i++) qtySel.add(new Option(i, i));
+        }
+
+        // 价格计算
+        function calculatePrice() {
+            const p = document.getElementById("product").value;
+            const m = document.getElementById("method").value;
+            if(p === "其它") return parseFloat(document.getElementById("customPrice").value) || 0;
+            const base = productPrices[p] || 0;
+            return m === "按袋" ? base : Math.round((Math.floor(base/10)*10+10)/100*100)/100;
+        }
+        function updatePrice() {
+            const p = document.getElementById("product").value;
+            const m = document.getElementById("method").value;
+            const display = document.getElementById("priceDisplay");
+            display.value = p === "其它" ? "--" : `${calculatePrice().toFixed(2)}${m==="按袋"?"元/袋":"元/斤"}`;
+        }
+        function updateInputs() {
+            const p = document.getElementById("product").value;
+            const name = document.getElementById("customName");
+            const price = document.getElementById("customPrice");
+            name.disabled = price.disabled = p !== "其它";
+            if(p !== "其它") { name.value = ""; price.value = ""; }
+            updatePrice();
+        }
+
+        // ========== 修复筛选下拉填充（关键：补上appendChild） ==========
+        function refreshFilterOptions() {
+            const sellers = [...new Set(records.map(r => r.seller))].sort();
+            const products = [...new Set(records.map(r => r.name))].sort();
+            const dates = [...new Set(records.map(r => r.time.split(" ")[0]))].sort();
+
+            function fillSelect(id, list) {
+                const sel = document.getElementById(id);
+                sel.innerHTML = "";
+                sel.add(new Option("全部", "全部"));
+                list.forEach(item => {
+                    const opt = new Option(item, item);
+                    sel.appendChild(opt); // 修复：漏写此行导致筛选无效
+                });
+            }
+
+            fillSelect("sellerFilter", sellers);
+            fillSelect("productFilter", products);
+            fillSelect("startDateFilter", dates);
+            fillSelect("endDateFilter", dates);
+        }
+
+        // 搜索筛选
+        function onSearch() {
+            searchKey = document.getElementById("searchInput").value.trim();
+            currentPage = 1; applyFilter();
+        }
+        function clearSearch() {
+            document.getElementById("searchInput").value = "";
+            searchKey = ""; currentPage = 1; applyFilter();
+        }
+        function applyFilter() {
+            filterSeller = document.getElementById("sellerFilter").value;
+            filterProduct = document.getElementById("productFilter").value;
+            filterStartDate = document.getElementById("startDateFilter").value;
+            filterEndDate = document.getElementById("endDateFilter").value;
+
+            filteredRecords = records.filter(r => {
+                if(filterSeller !== "全部" && r.seller !== filterSeller) return false;
+                if(filterProduct !== "全部" && r.name !== filterProduct) return false;
+                const d = r.time.split(" ")[0];
+                if(filterStartDate !== "全部" && d < filterStartDate) return false;
+                if(filterEndDate !== "全部" && d > filterEndDate) return false;
+                if(searchKey && !r.seller.includes(searchKey) && !r.name.includes(searchKey)) return false;
+                return true;
+            });
+
+            filteredRecords.sort((a,b) => sortTimeReverse ? b.time.localeCompare(a.time) : a.time.localeCompare(b.time));
+            totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+            currentPage = 1;
+            refreshPageTable();
+            const total = filteredRecords.reduce((s,r)=>s+r.total,0);
+            document.getElementById("totalText").textContent = `当前筛选总计: ${total.toFixed(2)} 元`;
+        }
+        function resetFilter() {
+            document.getElementById("sellerFilter").value = "全部";
+            document.getElementById("productFilter").value = "全部";
+            document.getElementById("startDateFilter").value = "全部";
+            document.getElementById("endDateFilter").value = "全部";
+            clearSearch();
+        }
+
+        // 分页
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById("pageSize").value);
+            currentPage = 1; applyFilter();
+        }
+        function prevPage() { if(currentPage>1) { currentPage--; refreshPageTable(); } }
+        function nextPage() { if(currentPage<totalPages) { currentPage++; refreshPageTable(); } }
+        function refreshPageTable() {
+            const start = (currentPage-1)*pageSize;
+            const pageData = filteredRecords.slice(start, start+pageSize);
+            const body = document.getElementById("tableBody");
+            body.innerHTML = "";
+            pageData.forEach((r,i) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${start+i+1}</td>
+                    <td>${r.time}</td>
+                    <td>${r.seller}</td>
+                    <td>${r.name}</td>
+                    <td>${r.method}</td>
+                    <td>${r.price.toFixed(2)}</td>
+                    <td>${r.qty}</td>
+                    <td>${r.total.toFixed(2)}</td>
+                    <td class="check-btn" onclick="toggleCheck(this)">☐</td>
+                `;
+                body.appendChild(tr);
+            });
+            document.getElementById("pageLabel").textContent = `第${currentPage}页/共${totalPages}页`;
+        }
+
+        // 核心功能
+        function addRecord() {
+            const seller = document.getElementById("seller").value.trim() || "0";
+            const product = document.getElementById("product").value;
+            const method = document.getElementById("method").value;
+            let name, price;
+
+            if(product === "其它") {
+                name = document.getElementById("customName").value.trim();
+                price = parseFloat(document.getElementById("customPrice").value);
+                if(!name || isNaN(price) || price<=0) { alert("请正确填写自定义产品"); return; }
+            } else {
+                name = product;
+                price = calculatePrice();
+            }
+
+            const qty = parseInt(document.getElementById("qty").value);
+            const total = Math.round(price*qty*100)/100;
+            const time = new Date().toLocaleString();
+            const record = { time, seller, name, method, price, qty, total };
+            records.push(record);
+            saveData("sales_data", records);
+            currentCustomerRecords.push(record);
+            writeLog("添加", `${name}×${qty}${method}`);
+            refreshFilterOptions();
+            applyFilter();
+            document.getElementById("seller").value = "";
+            document.getElementById("qty").selectedIndex = 0;
+            alert("添加成功");
+        }
+        function toggleCheck(el) { el.textContent = el.textContent==="☐"?"☑":"☐"; }
+        function deleteSelected() {
+            if(!confirm("确定删除？")) return;
+            const toDelete = [];
+            const start = (currentPage-1)*pageSize;
+            document.querySelectorAll("#tableBody tr").forEach((row,i) => {
+                if(row.querySelector(".check-btn").textContent === "☑") {
+                    toDelete.push(filteredRecords[start+i]);
+                }
+            });
+            records = records.filter(r => !toDelete.includes(r));
+            saveData("sales_data", records);
+            writeLog("删除", `${toDelete.length}条`);
+            refreshFilterOptions();
+            applyFilter();
+            alert("删除成功");
+        }
+        function deleteAllData() {
+            if(!confirm("确定清空所有数据？不可恢复！") || !confirm("再次确认？")) return;
+            records = []; filteredRecords = []; currentCustomerRecords = [];
+            saveData("sales_data", records);
+            writeLog("清空全部");
+            refreshFilterOptions();
+            applyFilter();
+            alert("已清空");
+        }
+        function clearTableView() {
+            if(!confirm("清空视图？数据不删")) return;
+            document.getElementById("tableBody").innerHTML = "";
+            document.getElementById("totalText").textContent = "当前筛选总计: 0.00 元";
+        }
+        function summarizeCustomer() {
+            if(!currentCustomerRecords.length) { alert("无商品"); return; }
+            let txt = "📝 整单小结\n\n", total=0;
+            currentCustomerRecords.forEach(r => {
+                txt += `• ${r.name} ×${r.qty}${r.method} ${r.total.toFixed(2)}元\n`;
+                total += r.total;
+            });
+            txt += `\n合计：${total.toFixed(2)} 元`;
+            writeLog("整单小结", total.toFixed(2));
+            alert(txt);
+            currentCustomerRecords = [];
+        }
+        function summarizeChecked() {
+            const checked = [];
+            document.querySelectorAll("#tableBody tr").forEach(row => {
+                if(row.querySelector(".check-btn").textContent === "☑") {
+                    const tds = row.querySelectorAll("td");
+                    checked.push({
+                        name: tds[3].textContent, qty: tds[6].textContent,
+                        method: tds[4].textContent, total: parseFloat(tds[7].textContent)
+                    });
+                }
+            });
+            if(!checked.length) { alert("请勾选"); return; }
+            let txt = "📝 勾选项小结\n\n", total=0;
+            checked.forEach(item => {
+                txt += `• ${item.name} ×${item.qty}${item.method} ${item.total.toFixed(2)}元\n`;
+                total += item.total;
+            });
+            txt += `\n合计：${total.toFixed(2)} 元`;
+            writeLog("勾选项小结", total.toFixed(2));
+            alert(txt);
+        }
+        function exportCSV() {
+            if(!records.length) { alert("无数据"); return; }
+            const headers = "ID,时间,售卖人,产品名称,售卖方式,单价,数量,总价\n";
+            const rows = records.map((r,i) => `${i+1},${r.time},${r.seller},${r.name},${r.method},${r.price},${r.qty},${r.total}`).join("\n");
+            const blob = new Blob([headers+rows], { type: "text/csv;charset=utf-8" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `销售记录_${new Date().getTime()}.csv`;
+            a.click();
+            writeLog("导出Excel");
+            alert("导出成功");
+        }
+    </script>
+</body>
+</html>
