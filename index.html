@@ -494,7 +494,16 @@
         function exportCSV() {
             if(!records.length) { alert("无数据"); return; }
             const headers = "ID,时间,售卖人,产品名称,售卖方式,单价,数量,总价\n";
-            const rows = records.map((r,i) => `${i+1},${r.time},${r.seller},${r.name},${r.method},${r.price},${r.qty},${r.total}`).join("\n");
+            // CSV格式处理：对包含逗号、双引号、换行符的字段用双引号包围
+            const escapeCSV = (val) => {
+                if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+                    return `"${val.replace(/"/g, '""')}"`;
+                }
+                return val;
+            };
+            const rows = records.map((r,i) => 
+                `${i+1},${escapeCSV(r.time)},${escapeCSV(r.seller)},${escapeCSV(r.name)},${escapeCSV(r.method)},${r.price},${r.qty},${r.total}`
+            ).join("\n");
             const blob = new Blob([headers+rows], { type: "text/csv;charset=utf-8" });
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
