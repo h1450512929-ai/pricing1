@@ -526,15 +526,18 @@
         // 初始化下拉
         function initSelects() {
             const productSel = document.getElementById("product");
+            productSel.innerHTML = "";  // 清空已存在的选项，避免重复
             Object.keys(productPrices).forEach(p => {
                 productSel.add(new Option(p, p));
             });
             productSel.add(new Option("其它", "其它"));
 
             const methodSel = document.getElementById("method");
+            methodSel.innerHTML = "";  // 清空已存在的选项，避免重复
             ["按袋", "按斤"].forEach(m => methodSel.add(new Option(m, m)));
 
             const qtySel = document.getElementById("qty");
+            qtySel.innerHTML = "";  // 清空已存在的选项，避免重复
             for(let i=1; i<=200; i++) qtySel.add(new Option(i, i));
         }
 
