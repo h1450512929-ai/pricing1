@@ -25,37 +25,23 @@ python3 -m http.server 8000
 
 3. 打开浏览器访问 `http://localhost:8000`
 
-### 自动更新功能
+### 更新方式
 
-#### 方法 1：监听文件变化自动更新（推荐）
+#### 手动更新
 
-启动监听器，修改文件后自动更新到 GitHub Pages：
-
-```bash
-npm run watch
-# 或
-node auto-update.js
-```
-
-监听器会：
-- 📁 监听 `.html`, `.css`, `.js`, `.json`, `.md` 文件变化
-- ⏱️ 防抖处理，避免频繁触发
-- 🔄 自动提交并推送更新
-- 🌐 自动更新网站内容
-
-#### 方法 2：手动更新
-
-修改代码后手动更新：
+修改代码后，使用以下命令进行手动更新：
 
 ```bash
-npm run update "更新说明"
-# 或
 ./update-pages.sh "更新说明"
 ```
 
-#### 方法 3：VS Code 任务
+示例：
 
-在 VS Code 中按 `Ctrl+Shift+B` 运行自动更新任务。
+```bash
+./update-pages.sh "修复了价格计算功能"
+```
+
+> 这个脚本会自动将修改提交到本地仓库，并推送到 `main` 和 `gh-pages` 分支，随后 GitHub Pages 会重新构建站点。
 
 ## 📋 功能特性
 
